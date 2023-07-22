@@ -15,7 +15,7 @@ from subprocess import Popen, check_output
 class Zefoy:
     def __init__(self) -> None:
         self.banner = ['8', '.d8b.', '_.d8888888b._', '.88888888888888b.', 'd88888888888888888b', '8888888888888888888', 'Y88888888888888888P', "'Y8888888888888P'", "_..._ 'Y88888P' _..._", '.d88888b. Y888P .d88888b.', 'd888888888b 888 d88888888b', "888P  `Y8888888888P'  Y888", 'b8b    Y88888888P    d8Y', '`"\'  #############  \'"`', 'dP d8b Yb', 'Ob=dP d888b Yb=dO', '`"` O88888O `"`', "'Y8P'", "'"]
-        
+
         self.config = {
             'mode'  : None,
             'size': get_terminal_size().columns,
@@ -204,9 +204,9 @@ class Zefoy:
         self.get_random_url()
 
         dict_res = {
-            'Too many requests': "_print('!','Too many requests'):wait(int(findall(r'var ltm=(.*);', response)[0]))",
-            'Please try again later. Server too busy.': "input(_print('/', 'Server Too Busy Try Later', input= True))",
-            'Checking Timer...': "wait(int(findall(r'ltm=(.*);', response)[0]))"
+            'Too many requests': "self._print('!','Too many requests'):self.wait(int(findall(r'var ltm=(.*);', response)[0]))",
+            'Please try again later. Server too busy.': "input(self._print('/', 'Server Too Busy Try Later', input= True))",
+            'Checking Timer...': "self.wait(int(findall(r'ltm=(.*);', response)[0]))"
         }
 
         if not remaining_time:
@@ -232,7 +232,6 @@ class Zefoy:
 
             sleep(1)
             response = self.decode(session.post(f'https://zefoy.com/{self.endpoints[self.config["mode"]]}', headers= headers, data= data).text)
-            
             try:
                 self.keys['key_2'] = findall(r'<input type="hidden" name="(.*)">', response)[0].split('" value="')[0]
             except:
@@ -247,7 +246,6 @@ class Zefoy:
                             eval(thing)
 
         else:
-            print(response)
             raise Exception
         
         
