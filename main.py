@@ -5,11 +5,14 @@ from time import sleep
 from base64 import b64decode, b64encode
 from random import choices, choice, uniform
 from string import ascii_letters, digits
-from requests import Session, post, get
+from requests import post, get, Session
 from datetime import datetime
 from urllib.parse import unquote
 from threading import Thread
-from subprocess import Popen, check_output
+from curl_cffi.requests import Session
+
+#from tls_client import Session
+
 
 
 class Zefoy:
@@ -46,13 +49,13 @@ class Zefoy:
 
     def title_info(self, video_id: str) -> None:
         headers = {
-            'authority' : 'tiktok.livecounts.io',
-            'origin'    : 'https://livecounts.io',
+            'host': 'tikstats.io',
             'user-agent': choice(self.get_user_agent()),
         }
         while True:
             try: 
-                res = get(f'https://tiktok.livecounts.io/video/stats/{video_id}', headers=headers)
+                res = get(f'https://tikstats.io/video/{video_id}', headers=headers)
+                input(findall(r'.innerText = "(.*)"', res))
                 if res.status_code == 200:
                     self.title(f'Tiktok Bot ~ [Views: {res.json()["viewCount"]} Shares: {res.json()["shareCount"]} Likes: {res.json()["likeCount"]}]')
             except: 
@@ -147,15 +150,19 @@ class Zefoy:
         while not solved:
             source_code = str(session.get('https://zefoy.com').text).replace('&amp;', '&')
             captcha_token = findall(r'<input type="hidden" name="(.*)">', source_code)
-            with open('source.txt', 'w') as file:
-                file.write(source_code)
+
             if 'token' in captcha_token:
                 captcha_token.remove('token')
                 
-            captcha_url    = findall(r'img src="([^"]*)"', source_code)[0]
+            try:
+                captcha_url    = findall(r'img src="([^"]*)"', source_code)[0]
+            except:
+                input(self._print('!', 'Zefoy may have blocked you or you have a vpn/adblock enabled', input=True))
+                exit()
+
             token_answer = findall(r'type="text" name="(.*)" oninput="this.value', source_code)[0]
             encoded_image = b64encode(BytesIO(session.get('https://zefoy.com' + captcha_url).content).read()).decode('utf-8')
-            captcha_answer = post(f"https://platipus9999.pythonanywhere.com/", json={'captcha': encoded_image, 'current_time': datetime.now().strftime("%H:%M:%S")}).json()["result"]
+            captcha_answer = post(f"https://platipus9999.pythonanywhere.com/", json={'image': encoded_image}).text
             
             sleep(uniform(1, 2))
 
@@ -217,7 +224,6 @@ class Zefoy:
                 'accept': '*/*',
                 'accept-language': 'fr-FR,fr;q=0.8',
                 'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary{}'.format(rand_token),
-                'cookie': 'PHPSESSID={}'.format(session.cookies.get('PHPSESSID')),
                 'host': 'zefoy.com',
                 'origin': 'https://zefoy.com',
                 'sec-ch-ua': '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
@@ -255,19 +261,6 @@ class Zefoy:
     def send(self, session: Session) -> None:
         rand_token = ''.join(choices(ascii_letters + digits, k=16))
         data  = f'------WebKitFormBoundary{rand_token}\r\nContent-Disposition: form-data; name="{self.keys["key_2"]}"\r\n\r\n{self.keys["id"]}\r\n------WebKitFormBoundary{rand_token}--\r\n'
-        cookies = dict(session.cookies.get_dict(), **{
-            'window_size': '1920x1007',
-            'user_agent': choice(self.get_user_agent()),
-            '__gads': 'ID=48182954ff3f81a0-226d749430e000be:T=1686742989:RT=1686742989:S=ALNI_MYjM6RvscAo2ewlENGbq-tFQt7zFg',
-            '__gpi': 'UID=00000c481d8f2737:T=1686742989:RT=1686742989:S=ALNI_MZdKleX7H967ptoxDYJXX0VvRU06A',
-            '_ga': 'GA1.1.1974881475.1686742989',
-            '_ga_1WEXNS5FFP': 'GS1.1.1686742989.1.1.1686742995.0.0.0',
-        })
-
-        unpack_cookies = ''
-
-        for name, value in cookies.items():
-            unpack_cookies += f'{name}={value}; '
 
         headers = {
             'authority': 'zefoy.com',
@@ -277,7 +270,6 @@ class Zefoy:
             'content-type': f'multipart/form-data; boundary=----WebKitFormBoundary{rand_token}',
             'origin': 'https://zefoy.com',
             'pragma': 'no-cache',
-            'cookie': unpack_cookies.strip(),
             'sec-ch-ua': '"Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"macOS"',
@@ -289,13 +281,14 @@ class Zefoy:
             }
         
         sleep(uniform(1, 2))     
-        response = self.decode(post('https://zefoy.com/{}'.format(self.endpoints[self.config['mode']]), headers= headers, data= data, cookies= cookies).text)
-        
+        response = self.decode(session.post('https://zefoy.com/{}'.format(self.endpoints[self.config['mode']]), headers= headers, data= data).text)
         
         if 'Successfully' and 'sent' in response:
             self._print("!", f"{self.config['mode']} Sent", True)
 
         elif 'Session expired' in response:
+            self._print('!', 'Session expired')
+            sleep(2)
             raise Exception
 
         else:
@@ -322,20 +315,16 @@ class Zefoy:
         
         Thread(target=self.get_id, args=(self.config['video_url'],),  name="get_id").start()
         
-        
-        
         while True:
-            _session = Session()
-            _session.headers = {        
-            'authority'             : 'zefoy.com',
-            'origin'                : 'https://zefoy.com',
-            'authority'             : 'zefoy.com',
-            'cp-extension-installed': 'Yes',
-            'user-agent'            : choice(self.get_user_agent()),
-        }
-        
-            with _session as session:
-                self.repeat_task(session)
+            with  Session() as sess:
+                sess.headers = {        
+                    'authority'             : 'zefoy.com',
+                    'origin'                : 'https://zefoy.com',
+                    'authority'             : 'zefoy.com',
+                    'cp-extension-installed': 'Yes',
+                    'user-agent'            : choice(self.get_user_agent()),
+                    }
+                self.repeat_task(sess)
 
 
 
