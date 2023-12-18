@@ -103,17 +103,6 @@ class Zefoy:
     def decode(self, text: str) -> str: # from tekky
         return b64decode(unquote(text[::-1])).decode()
 
-    def get_random_url(self) -> None:
-        start = "https://www.tiktok.com/@"
-        done = False
-        
-        while not done:
-            try:
-                self.config['url'] = choice([start + _url for _url in findall(r'<a href="'+ start + r'(.*?)"', get('https://www.tiktok.com/explore').text)])
-                done = True
-            except:
-                continue
-
     def get_id(self, url: str) -> str:
         try: self.keys['id'] =  int(findall(r'/video/(.*)', url)[0])
         except: self.keys['id'] =  int(str(findall(r'/video/(.*)', url)[0]).split('?')[0])
@@ -203,8 +192,6 @@ class Zefoy:
 
     def search(self, session: Session, remaining_time: bool or int = False) -> str:
 
-        self.get_random_url()
-
         dict_res = {
             'Too many requests': "self._print('!','Too many requests'):self.wait(int(findall(r'var ltm=(.*);', response)[0]))",
             'Please try again later. Server too busy.': "input(self._print('/', 'Server Too Busy Try Later', input= True))",
@@ -213,7 +200,7 @@ class Zefoy:
 
         if not remaining_time:
             rand_token = ''.join(choices(ascii_letters + digits, k=16))
-            data = f'------WebKitFormBoundary{rand_token}\r\nContent-Disposition: form-data; name="{self.keys["key_1"]}"\r\n\r\n{self.config["url"]}\r\n------WebKitFormBoundary{rand_token}--\r\n'
+            data = f'------WebKitFormBoundary{rand_token}\r\nContent-Disposition: form-data; name="{self.keys["key_1"]}"\r\n\r\n{self.config["video_url"]}\r\n------WebKitFormBoundary{rand_token}--\r\n'
             headers = {
                 'authority': 'zefoy.com',
                 'accept': '*/*',
