@@ -9,9 +9,7 @@ from requests import post, get, Session
 from datetime import datetime
 from urllib.parse import unquote
 from threading import Thread
-from curl_cffi.requests import Session
-
-#from tls_client import Session
+from fake_useragent import UserAgent
 
 
 
@@ -44,13 +42,10 @@ class Zefoy:
     def hide_cursor(self) -> None:
         print('\033[?25l', end='')
 
-    def get_user_agent(self) -> str:
-        return findall(r'<div class="copy" data-copy="(.*)">', get('https://iplogger.org/useragents/?device=random&count=100').text)
-
     def title_info(self, video_id: str) -> None:
         headers = {
             'host': 'tikstats.io',
-            'user-agent': choice(self.get_user_agent()),
+            'user-agent': UserAgent().chrome,
         }
         while True:
             try: 
@@ -232,7 +227,7 @@ class Zefoy:
                 'sec-fetch-dest': 'empty',
                 'sec-fetch-mode': 'cors',
                 'sec-fetch-site': 'same-origin',
-                'user-agent': choice(self.get_user_agent()),
+                'user-agent': UserAgent().chrome,
                 'x-requested-with': 'XMLHttpRequest',
             }
 
@@ -276,7 +271,7 @@ class Zefoy:
             'sec-fetch-dest': 'empty',
             'sec-fetch-mode': 'cors',
             'sec-fetch-site': 'same-origin',
-            'user-agent': choice(self.get_user_agent()),
+            'user-agent': UserAgent().chrome,
             'x-requested-with': 'XMLHttpRequest'
             }
         
@@ -322,7 +317,7 @@ class Zefoy:
                     'origin'                : 'https://zefoy.com',
                     'authority'             : 'zefoy.com',
                     'cp-extension-installed': 'Yes',
-                    'user-agent'            : choice(self.get_user_agent()),
+                    'user-agent'            : UserAgent().chrome,
                     }
                 self.repeat_task(sess)
 
