@@ -44,14 +44,10 @@ class Zefoy:
         print('\033[?25l', end='')
 
 
-    def title_info(self, video_id: str) -> None:
-        headers = {
-            'host': 'tikstats.io',
-            'user-agent': UserAgent().chrome,
-        }
+    def title_info(self) -> None:
         while True:
             try: 
-                res = loads(search(r'"stats":(.*),"warnInfo"', get('https://www.tiktok.com/@kreyto.cyber/video/7149589470260595973', headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}).text).group(1))
+                res = loads(search(r'"stats":(.*),"warnInfo"', get(self.config['video_url'], headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}).text).group(1))
                 self.title(f'Tiktok Bot ~ [Views: {res["playCount"]} Shares: {res["shareCount"]} Likes: {res["diggCount"]} Favorites: {res["collectCount"]}]')
             except: 
                 continue
@@ -106,10 +102,6 @@ class Zefoy:
     def get_id(self, url: str) -> str:
         try: self.keys['id'] =  int(findall(r'/video/(.*)', url)[0])
         except: self.keys['id'] =  int(str(findall(r'/video/(.*)', url)[0]).split('?')[0])
-
-        thread = Thread(target=self.title_info, args= (str(self.keys['id']),),  name="title_info")
-        thread.start()
-        self.threads.append(thread)
         
         
     def keep_thread_alive(self) -> None:
@@ -300,6 +292,10 @@ class Zefoy:
             video_url = 'https://www.tiktok.com/@' + search(r'<a href="https://www.tiktok.com/@(.*)\?', response).group(1)
 
         self.config['video_url'] = video_url
+
+        thread = Thread(target=self.title_info, name="title_info")
+        thread.start()
+        self.threads.append(thread)
         
         Thread(target=self.get_id, args=(self.config['video_url'],),  name="get_id").start()
         
