@@ -1,5 +1,5 @@
 from os import get_terminal_size, system as sys, name as os_name
-from re import findall
+from re import findall, search
 from io import BytesIO
 from time import sleep
 from base64 import b64decode, b64encode
@@ -10,6 +10,7 @@ from datetime import datetime
 from urllib.parse import unquote
 from threading import Thread
 from fake_useragent import UserAgent
+from json import loads
 
 
 
@@ -42,6 +43,7 @@ class Zefoy:
     def hide_cursor(self) -> None:
         print('\033[?25l', end='')
 
+
     def title_info(self, video_id: str) -> None:
         headers = {
             'host': 'tikstats.io',
@@ -49,10 +51,8 @@ class Zefoy:
         }
         while True:
             try: 
-                res = get(f'https://tikstats.io/video/{video_id}', headers=headers)
-                input(findall(r'.innerText = "(.*)"', res))
-                if res.status_code == 200:
-                    self.title(f'Tiktok Bot ~ [Views: {res.json()["viewCount"]} Shares: {res.json()["shareCount"]} Likes: {res.json()["likeCount"]}]')
+                res = loads(search(r'"stats":(.*),"warnInfo"', get('https://www.tiktok.com/@kreyto.cyber/video/7149589470260595973', headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}).text).group(1))
+                self.title(f'Tiktok Bot ~ [Views: {res["playCount"]} Shares: {res["shareCount"]} Likes: {res["diggCount"]} Favorites: {res["collectCount"]}]')
             except: 
                 continue
 
@@ -190,7 +190,7 @@ class Zefoy:
             except:
                 continue
 
-    def search(self, session: Session, remaining_time: bool or int = False) -> str:
+    def _search(self, session: Session, remaining_time: bool or int = False) -> str:
 
         dict_res = {
             'Too many requests': "self._print('!','Too many requests'):self.wait(int(findall(r'var ltm=(.*);', response)[0]))",
@@ -276,15 +276,15 @@ class Zefoy:
         else:
             try:
                 remaining_time = int(findall(r'var ltm=(.*);', response)[0])
-                self.search(session, remaining_time)
+                self._search(session, remaining_time)
             except:
-                self.search(session)
+                self._search(session)
                 
     def repeat_task(self, session: Session) -> None:
         self.solve(session)
         sleep(1)
         while True: 
-            try: self.search(session)
+            try: self._search(session)
             except: break    
 
     def start(self) -> None:  
@@ -293,7 +293,13 @@ class Zefoy:
         self.clear()
         print(self.display(self.banner))
         
-        self.config['video_url'] = input(self._print('?', "Video Url > ", input = True))
+        video_url = input(self._print('?', "Video Url > ", input = True))
+        response = get(video_url, allow_redirects=False).text
+
+        if 'Please wait...' not in response:
+            video_url = 'https://www.tiktok.com/@' + search(r'<a href="https://www.tiktok.com/@(.*)\?', response).group(1)
+
+        self.config['video_url'] = video_url
         
         Thread(target=self.get_id, args=(self.config['video_url'],),  name="get_id").start()
         
