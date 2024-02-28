@@ -1,5 +1,7 @@
 # Tiktok-View-Bot
-No Selenium shit, the most efficient most cleanest
+No Selenium shit, the most efficient most cleanest.
+Use it when cloudflare is disabled on <a href="https://zefoy.com">zefoy.com<a>
+And when clouflare is enabled use the browser version: <a href="https://github.com/platipus9999/Tiktok-Bot">Click Here<a>
 
 How to use:
 ```
