@@ -11,6 +11,7 @@ from urllib.parse import unquote
 from threading import Thread
 from fake_useragent import UserAgent
 from json import loads
+from datetime import datetime
 
 
 
@@ -98,10 +99,6 @@ class Zefoy:
 
     def decode(self, text: str) -> str: # from tekky
         return b64decode(unquote(text[::-1])).decode()
-
-    def get_id(self, url: str) -> str:
-        try: self.keys['id'] =  int(findall(r'/video/(.*)', url)[0])
-        except: self.keys['id'] =  int(str(findall(r'/video/(.*)', url)[0]).split('?')[0])
         
         
     def keep_thread_alive(self) -> None:
@@ -213,7 +210,7 @@ class Zefoy:
             sleep(1)
             response = self.decode(session.post(f'https://zefoy.com/{self.endpoints[self.config["mode"]]}', headers= headers, data= data).text)
             try:
-                self.keys['key_2'] = findall(r'<input type="hidden" name="(.*)">', response)[0].split('" value="')[0]
+                self.keys['key_2'], self.keys['id'] = findall(r'name="([a-f0-9]+)" value="(\d+)"', response)
             except:
 
                 if 'Session expired' in response:
@@ -286,18 +283,16 @@ class Zefoy:
         print(self.display(self.banner))
         
         video_url = input(self._print('?', "Video Url > ", input = True))
-        response = get(video_url, allow_redirects=False).text
+        response = get(video_url, allow_redirects=False)
 
-        if 'Please wait...' not in response:
-            video_url = 'https://www.tiktok.com/@' + search(r'<a href="https://www.tiktok.com/@(.*)\?', response).group(1)
+        if response.status_code == 301:
+            video_url = 'https://www.tiktok.com/@' + search(r'<a href="https://www.tiktok.com/@(.*)\?', response.text).group(1)
 
         self.config['video_url'] = video_url
 
         thread = Thread(target=self.title_info, name="title_info")
         thread.start()
         self.threads.append(thread)
-        
-        Thread(target=self.get_id, args=(self.config['video_url'],),  name="get_id").start()
         
         while True:
             with  Session() as sess:
