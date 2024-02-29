@@ -210,7 +210,7 @@ class Zefoy:
             sleep(1)
             response = self.decode(session.post(f'https://zefoy.com/{self.endpoints[self.config["mode"]]}', headers= headers, data= data).text)
             try:
-                self.keys['key_2'], self.keys['id'] = findall(r'name="([a-f0-9]+)" value="(\d+)"', response)
+                self.keys['key_2'], self.keys['id'] = findall(r'name="([a-f0-9]+)" value="(\d+)"', response)[0]
             except:
 
                 if 'Session expired' in response:
